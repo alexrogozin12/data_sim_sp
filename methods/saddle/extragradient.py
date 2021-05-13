@@ -4,14 +4,14 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Callable
 from oracles.saddle import RobustLinearOracle
-from oracles.saddle import ArrayPair
+from oracles.saddle import ArrayPair, BaseSmoothSaddleOracle
 from .base import BaseSaddleMethod
 
 
 class Extragradient(BaseSaddleMethod):
     def __init__(
             self,
-            oracle: RobustLinearOracle,
+            oracle: BaseSmoothSaddleOracle,
             stepsize: float,
             z_0: ArrayPair,
             trace: bool = True):
@@ -19,5 +19,5 @@ class Extragradient(BaseSaddleMethod):
         self.stepsize = stepsize
 
     def step(self):
-        w = self.z - self.oracle.grad(self.z.x, self.z.y) * self.stepsize
-        self.z = self.z - self.oracle.grad(w.x, w.y) * self.stepsize
+        w = self.z - self.oracle.grad(self.z) * self.stepsize
+        self.z = self.z - self.oracle.grad(w) * self.stepsize

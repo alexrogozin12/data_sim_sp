@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Callable
+from oracles.saddle import ArrayPair
 
 
 def grad_finite_diff(func, x, eps=1e-8):
@@ -23,7 +24,7 @@ def grad_finite_diff(func, x, eps=1e-8):
     return np.array(grad)
 
 
-def grad_finite_diff_saddle(func: Callable, x: np.ndarray, y: np.ndarray, eps: float = 1e-8):
+def grad_finite_diff_saddle(func: Callable, z: ArrayPair, eps: float = 1e-8):
     """
     Same as grad_finite_diff, but for saddle-point problems
 
@@ -41,22 +42,25 @@ def grad_finite_diff_saddle(func: Callable, x: np.ndarray, y: np.ndarray, eps: f
     eps: float
         Size of argument deviation
     """
-    x, y, fval = x.astype(np.float64), y.astype(np.float64), func(x, y)
 
     grad_x = []
-    n = x.size
+    n = z.x.size
     for i in range(n):
         dnum = np.zeros(n)
         dnum[i] = 1.
-        der = (func(x + eps * dnum, y) - func(x, y)) / eps
+        arg = z.copy()
+        arg.x = z.x + eps * dnum
+        der = (func(arg) - func(z)) / eps
         grad_x.append(der)
 
     grad_y = []
-    n = y.size
+    n = z.y.size
     for i in range(n):
         dnum = np.zeros(n)
         dnum[i] = 1.
-        der = (func(x, y + eps * dnum) - func(x, y)) / eps
+        arg = z.copy()
+        arg.y = z.y + eps * dnum
+        der = (func(arg) - func(z)) / eps
         grad_y.append(der)
 
     return np.array(grad_x), np.array(grad_y)

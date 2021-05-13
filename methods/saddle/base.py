@@ -40,7 +40,7 @@ class BaseSaddleMethod(object):
         now = datetime.now()
         self.time += (now - self._absolute_time).total_seconds()
         self._absolute_time = now
-        self.hist['func'].append(self.oracle.func(self.z.x, self.z.y))
+        self.hist['func'].append(self.oracle.func(self.z))
         self.hist['time'].append(self.time)
 
     def step(self):

@@ -35,16 +35,16 @@ class BaseSmoothSaddleOracle(object):
     Base class for implementation of oracles for saddle point problems.
     """
 
-    def func(self, x: np.ndarray, y: np.ndarray) -> float:
+    def func(self, z: ArrayPair) -> float:
         raise NotImplementedError('func() is not implemented.')
 
-    def grad_x(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    def grad_x(self, z: ArrayPair) -> np.ndarray:
         raise NotImplementedError('grad_x() is not implemented.')
 
-    def grad_y(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    def grad_y(self, z: ArrayPair) -> np.ndarray:
         raise NotImplementedError('grad_y() oracle is not implemented.')
 
-    def grad(self, x: np.ndarray, delta: np.ndarray) -> ArrayPair:
-        grad_x = self.grad_x(x, delta)
-        grad_delta = self.grad_y(x, delta)
-        return ArrayPair(grad_x, -grad_delta)
+    def grad(self, z: ArrayPair) -> ArrayPair:
+        grad_x = self.grad_x(z)
+        grad_y = self.grad_y(z)
+        return ArrayPair(grad_x, -grad_y)

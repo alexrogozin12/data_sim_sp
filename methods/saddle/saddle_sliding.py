@@ -2,7 +2,6 @@ import numpy as np
 
 from typing import Callable
 from oracles.saddle import BaseSmoothSaddleOracle, ArrayPair
-from .base import BaseSaddleMethod
 
 
 class SaddlePointOracleRegularizer(BaseSmoothSaddleOracle):
@@ -11,18 +10,15 @@ class SaddlePointOracleRegularizer(BaseSmoothSaddleOracle):
         self.eta = eta
         self.v = v
 
-    def func(self, x, y) -> float:
-        return self.eta * self.oracle.func(x, y) + 0.5 * (x - self.v.x).dot(x - self.v.x) - \
-               0.5 * (y - self.v.y).dot(y - self.v.y)
+    def func(self, z: ArrayPair) -> float:
+        return self.eta * self.oracle.func(z) + 0.5 * (z.x - self.v.x).dot(z.x - self.v.x) - \
+               0.5 * (z.y - self.v.y).dot(z.y - self.v.y)
 
-    def grad_x(self, x, y) -> np.ndarray:
-        return self.eta * self.oracle.grad_x(x, y) + x - self.v.x
+    def grad_x(self, z: ArrayPair) -> np.ndarray:
+        return self.eta * self.oracle.grad_x(z) + z.x - self.v.x
 
-    def grad_y(self, x, y) -> np.ndarray:
-        return self.eta * self.oracle.grad_y(x, y) + self.v.y - y
-
-    def grad(self, x, y) -> ArrayPair:
-        return ArrayPair(self.grad_x(x, y), -self.grad_y(x, y))
+    def grad_y(self, z: ArrayPair) -> np.ndarray:
+        return self.eta * self.oracle.grad_y(z) + self.v.y - z.y
 
 
 class SaddleSliding(object):
@@ -43,7 +39,7 @@ class SaddleSliding(object):
         self.trace = trace
 
     def step(self):
-        v = self.z - self.eta * self.oracle_g.grad(self.z)
+        v = self.z - self.oracle_g.grad(self.z) * self.eta
         u = self.solve_subproblem(v)
         self.z = u + self.eta * (self.oracle_g.grad(self.z) - self.oracle_g.grad(u))
 

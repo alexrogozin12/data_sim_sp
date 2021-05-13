@@ -3,7 +3,7 @@ import sys
 sys.path.append("../")
 
 import numpy as np
-from oracles.saddle.robust_linear import create_robust_linear_oracle
+from oracles.saddle import ArrayPair, create_robust_linear_oracle
 from utils import grad_finite_diff_saddle
 
 
@@ -14,12 +14,13 @@ def test_robust_linear_oracle():
     b = np.random.randn(n)
     oracle = create_robust_linear_oracle(A, b, regcoef=0.1)
 
-    for _ in range(30):
-        x, delta = np.random.rand(d), np.random.rand(d)
-        oracle_grad_x = oracle.grad_x(x, delta)
-        oracle_grad_y = oracle.grad_y(x, delta)
+    for _ in range(20):
+        z = ArrayPair(np.random.rand(d), np.random.rand(d))
 
-        diff_grad_x, diff_grad_y = grad_finite_diff_saddle(oracle.func, x, delta, eps=1e-7)
+        oracle_grad_x = oracle.grad_x(z)
+        oracle_grad_y = oracle.grad_y(z)
+
+        diff_grad_x, diff_grad_y = grad_finite_diff_saddle(oracle.func, z, eps=1e-7)
 
         assert np.allclose(oracle_grad_x, diff_grad_x)
         assert np.allclose(oracle_grad_y, diff_grad_y)

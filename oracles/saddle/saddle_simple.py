@@ -1,16 +1,16 @@
 import numpy as np
-from .base import BaseSmoothSaddleOracle
+from .base import BaseSmoothSaddleOracle, ArrayPair
 
 
 class ScalarProdOracle(BaseSmoothSaddleOracle):
     def __init__(self):
         pass
 
-    def func(self, x: np.ndarray, y: np.ndarray) -> float:
-        return x.dot(y)
+    def func(self, z: ArrayPair) -> float:
+        return z.x.dot(z.y)
 
-    def grad_x(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
-        return y
+    def grad_x(self, z: ArrayPair) -> np.ndarray:
+        return z.y
 
-    def grad_y(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
-        return x
+    def grad_y(self, z: ArrayPair) -> np.ndarray:
+        return z.x
