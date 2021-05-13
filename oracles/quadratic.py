@@ -18,6 +18,6 @@ class QuadraticOracle(BaseSmoothOracle):
 
     def hess(self, x):
         return self.A
-    
+
     def hess_mat_prod(self, x, S):
         return self.A.dot(S)

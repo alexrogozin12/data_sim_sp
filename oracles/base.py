@@ -5,6 +5,7 @@ class BaseSmoothOracle(object):
     """
     Base class for implementation of oracles.
     """
+
     def func(self, x):
         """
         Computes the value of function at point x.
@@ -16,13 +17,13 @@ class BaseSmoothOracle(object):
         Computes the gradient at point x.
         """
         raise NotImplementedError('Grad oracle is not implemented.')
-    
+
     def hess(self, x):
         """
         Computes the Hessian matrix at point x.
         """
         raise NotImplementedError('Hessian oracle is not implemented.')
-    
+
     def func_directional(self, x, d, alpha):
         """
         Computes phi(alpha) = f(x + alpha*d).

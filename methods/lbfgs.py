@@ -1,17 +1,15 @@
 import numpy as np
-import scipy
 
-from datetime import datetime
-from collections import defaultdict, deque
+from collections import deque
 from methods.line_search import get_line_search_tool
 from methods.base import BaseMethod
 
 
 class LBFGS(BaseMethod):
-    def __init__(self, oracle, x_0, tolerance=1e-4, memory_size=10, 
-                 line_search_options=None, stopping_criteria='grad_rel', 
+    def __init__(self, oracle, x_0, tolerance=1e-4, memory_size=10,
+                 line_search_options=None, stopping_criteria='grad_rel',
                  trace=True):
-        
+
         super(LBFGS, self).__init__(oracle, x_0, stopping_criteria, trace)
         self.x_k = self.x_0.copy()
         self.grad_norm_0 = np.linalg.norm(self.oracle.grad(x_0))
@@ -23,7 +21,7 @@ class LBFGS(BaseMethod):
             self.alpha_0 = self.line_search_tool.c
         else:
             self.alpha_0 = 1.
-    
+
     def step(self):
         self.grad_k = self.oracle.grad(self.x_k)
 
@@ -46,7 +44,7 @@ class LBFGS(BaseMethod):
             return
 
         self.x_k = self.x_k + alpha_k * d_k
-        self.lbfgs_queue.append((self.x_k - self.old_x_k, 
+        self.lbfgs_queue.append((self.x_k - self.old_x_k,
                                  self.oracle.grad(self.x_k) - self.old_grad_k))
 
     def lbfgs_mul(self, v, memory, gamma_0):

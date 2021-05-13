@@ -1,4 +1,3 @@
-import numpy as np
 from scipy.optimize.linesearch import scalar_search_wolfe2
 
 

@@ -1,5 +1,4 @@
 import numpy as np
-import scipy
 
 
 def grad_finite_diff(func, x, eps=1e-8):
@@ -45,6 +44,6 @@ def hess_finite_diff(func, x, eps=1e-5):
         dnum_i[i] = eps
         dnum_j = np.zeros(x.size)
         dnum_j[j] = eps
-        hess[i][j] = (func(x + dnum_i + dnum_j) - func(x + dnum_i) - func(x + dnum_j) + fval) / eps**2
+        hess[i][j] = (func(x + dnum_i + dnum_j) - func(x + dnum_i) - func(x + dnum_j) + fval) / eps ** 2
         hess[j][i] = hess[i][j]
     return np.array(hess)

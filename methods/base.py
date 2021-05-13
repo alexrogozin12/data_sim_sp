@@ -1,7 +1,6 @@
 import numpy.linalg as npla
 from collections import defaultdict
 from datetime import datetime
-from tqdm import tqdm_notebook
 
 
 class BaseMethod(object):
@@ -18,15 +17,15 @@ class BaseMethod(object):
         elif stopping_criteria == None:
             self.stopping_criteria = self.stopping_criteria_none
         else:
-            raise ValueError('Unknown stopping criteria type: "{}"'\
+            raise ValueError('Unknown stopping criteria type: "{}"' \
                              .format(stopping_criteria))
-    
+
     def run(self, max_iter=10, max_time=1200):
         if not hasattr(self, 'hist'):
             self.hist = defaultdict(list)
         if not hasattr(self, 'time'):
             self.time = 0.
-        
+
         self._absolute_time = datetime.now()
         try:
             for iter_count in range(max_iter):
@@ -40,9 +39,9 @@ class BaseMethod(object):
                     break
         except KeyboardInterrupt:
             print('Run interrupted at iter #{}'.format(iter_count))
-        
+
         self.hist['x_star'] = self.x_k.copy()
-    
+
     def _update_history(self):
         now = datetime.now()
         self.time += (now - self._absolute_time).total_seconds()
@@ -55,15 +54,15 @@ class BaseMethod(object):
 
     def step(self):
         raise NotImplementedError('step() not implemented!')
-    
+
     def stopping_criteria_grad_relative(self):
-        return npla.norm(self.grad_k)**2 <= self.tolerance * self.grad_norm_0**2
+        return npla.norm(self.grad_k) ** 2 <= self.tolerance * self.grad_norm_0 ** 2
 
     def stopping_criteria_grad_absolute(self):
-        return npla.norm(self.grad_k)**2 <= self.tolerance
-    
+        return npla.norm(self.grad_k) ** 2 <= self.tolerance
+
     def stopping_criteria_func_absolute(self):
         return self.oracle.func(self.x_k) < self.tolerance
-    
+
     def stopping_criteria_none(self):
         return False

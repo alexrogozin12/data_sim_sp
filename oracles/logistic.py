@@ -1,5 +1,4 @@
 import numpy as np
-import scipy
 from scipy.special import expit
 from oracles import BaseSmoothOracle
 
@@ -32,14 +31,14 @@ class LogRegL2Oracle(BaseSmoothOracle):
         n = x.size
         degrees = -np.multiply(self.b, self.matvec_Ax(x))
         sigmas = expit(degrees)
-        diagonal = np.multiply(self.b**2, sigmas)
+        diagonal = np.multiply(self.b ** 2, sigmas)
         diagonal = np.multiply(diagonal, 1 - sigmas)
         return np.array(1 / m * self.matmat_ATsA(diagonal) + self.regcoef * np.eye(n))
-    
+
     def hess_mat_prod(self, x, S):
         m = self.b.shape[0]
         n = x.size
-        diagonal = np.multiply(self.b**2, self.sigmas)
+        diagonal = np.multiply(self.b ** 2, self.sigmas)
         diagonal = np.multiply(diagonal, 1 - self.sigmas)
         AS = self.matvec_Ax(S)
         if isinstance(AS, np.ndarray):
