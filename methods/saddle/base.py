@@ -20,7 +20,9 @@ class BaseSaddleMethod(object):
         self.z = z_0.copy()
         self.trace = trace
 
-    def run(self, max_iter=10, max_time=1200):
+    def run(self, max_iter, max_time=None):
+        if max_time is None:
+            max_time = +np.inf
         if not hasattr(self, 'hist'):
             self.hist = defaultdict(list)
         if not hasattr(self, 'time'):

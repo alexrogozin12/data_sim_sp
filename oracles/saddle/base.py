@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Tuple
 
 
 class ArrayPair(object):
@@ -23,11 +24,17 @@ class ArrayPair(object):
     def __mul__(self, other: float):
         return ArrayPair(self.x * other, self.y * other)
 
+    def __rmul__(self, other: float):
+        return self.__mul__(other)
+
     def copy(self):
         return ArrayPair(self.x.copy(), self.y.copy())
 
     def dot(self, other: "ArrayPair"):
         return self.x.dot(other.x) + self.y.dot(other.y)
+
+    def tuple(self) -> Tuple[np.ndarray, np.ndarray]:
+        return self.x, self.y
 
 
 class BaseSmoothSaddleOracle(object):

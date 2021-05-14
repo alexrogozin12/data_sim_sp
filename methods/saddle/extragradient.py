@@ -21,3 +21,10 @@ class Extragradient(BaseSaddleMethod):
     def step(self):
         w = self.z - self.oracle.grad(self.z) * self.stepsize
         self.z = self.z - self.oracle.grad(w) * self.stepsize
+
+
+def extragradient_solver(oracle: BaseSmoothSaddleOracle, stepsize: float, z_0: ArrayPair,
+                         num_iter: int) -> ArrayPair:
+    method = Extragradient(oracle, stepsize, z_0, trace=True)
+    method.run(max_iter=num_iter)
+    return method.hist['z_star']
