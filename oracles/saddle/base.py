@@ -36,6 +36,20 @@ class ArrayPair(object):
     def tuple(self) -> Tuple[np.ndarray, np.ndarray]:
         return self.x, self.y
 
+    @staticmethod
+    def zeros(*args, **kwargs) -> "ArrayPair":
+        """
+        Same args as in np.zeros()
+        """
+        return ArrayPair(np.zeros(*args, **kwargs), np.zeros(*args, **kwargs))
+
+    @staticmethod
+    def zeros_like(*args, **kwargs) -> "ArrayPair":
+        """
+        Same args as in np.zeros_like()
+        """
+        return ArrayPair(np.zeros_like(*args, **kwargs), np.zeros_like(*args, **kwargs))
+
 
 class BaseSmoothSaddleOracle(object):
     """

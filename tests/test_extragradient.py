@@ -11,7 +11,7 @@ from methods.saddle import Extragradient
 def create_random_robust_linear_oracle(n: int, d: int) -> RobustLinearOracle:
     A = np.random.randn(n, d)
     b = np.random.randn(n)
-    oracle = create_robust_linear_oracle(A, b, regcoef=0.1)
+    oracle = create_robust_linear_oracle(A, b, regcoef_x=0.1, regcoef_delta=0.5)
     return oracle
 
 

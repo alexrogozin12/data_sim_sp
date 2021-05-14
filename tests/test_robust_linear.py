@@ -12,7 +12,7 @@ def test_robust_linear_oracle():
     n, d = 50, 8
     A = np.random.randn(n, d)
     b = np.random.randn(n)
-    oracle = create_robust_linear_oracle(A, b, regcoef=0.1)
+    oracle = create_robust_linear_oracle(A, b, regcoef_x=0.1, regcoef_delta=0.5)
 
     for _ in range(20):
         z = ArrayPair(np.random.rand(d), np.random.rand(d))
