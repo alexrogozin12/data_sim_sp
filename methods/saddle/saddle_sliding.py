@@ -1,11 +1,11 @@
 import numpy as np
 
-from typing import Callable
+from typing import Callable, Optional
 from oracles.saddle import BaseSmoothSaddleOracle, ArrayPair
-from methods.saddle import Extragradient
+from methods.saddle import Logger
 from datetime import datetime
 from collections import defaultdict
-
+from .base import BaseSaddleMethod
 
 
 class SaddlePointOracleRegularizer(BaseSmoothSaddleOracle):
@@ -25,7 +25,7 @@ class SaddlePointOracleRegularizer(BaseSmoothSaddleOracle):
         return self.eta * self.oracle.grad_y(z) + self.v.y - z.y
 
 
-class SaddleSliding(object):
+class SaddleSliding(BaseSaddleMethod):
     def __init__(
             self,
             oracle_g: BaseSmoothSaddleOracle,
@@ -35,16 +35,15 @@ class SaddleSliding(object):
             inner_solver: Callable,
             inner_iterations: int,
             z_0: ArrayPair,
-            trace: bool = True
+            logger: Optional[Logger]
     ):
+        super().__init__(oracle_g, z_0, None, None, logger)
         self.oracle_g = oracle_g
         self.oracle_phi = oracle_phi
         self.stepsize_outer = stepsize_outer
         self.stepsize_inner = stepsize_inner
         self.inner_solver = inner_solver
         self.inner_iterations = inner_iterations
-        self.z = z_0
-        self.trace = trace
 
     def step(self):
         v = self.z - self.oracle_g.grad(self.z) * self.stepsize_outer
@@ -53,29 +52,6 @@ class SaddleSliding(object):
 
     def solve_subproblem(self, v: ArrayPair) -> ArrayPair:
         suboracle = SaddlePointOracleRegularizer(self.oracle_phi, self.stepsize_outer, v)
-        return self.inner_solver(suboracle, self.stepsize_inner, v, self.inner_iterations)
-
-    def run(self, max_iter, max_time=None):
-        if max_time is None:
-            max_time = +np.inf
-        if not hasattr(self, 'hist'):
-            self.hist = defaultdict(list)
-        if not hasattr(self, 'time'):
-            self.time = 0.
-
-        self._absolute_time = datetime.now()
-        for iter_count in range(max_iter):
-            if self.time > max_time:
-                break
-            if self.trace:
-                self._update_history()
-            self.step()
-
-        self.hist['z_star'] = self.z.copy()
-
-    def _update_history(self):
-        now = datetime.now()
-        self.time += (now - self._absolute_time).total_seconds()
-        self._absolute_time = now
-        self.hist['func'].append(self.oracle_g.func(self.z))
-        self.hist['time'].append(self.time)
+        return self.inner_solver(
+            suboracle,
+            self.stepsize_inner, v, num_iter=self.inner_iterations)

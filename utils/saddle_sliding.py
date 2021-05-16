@@ -1,5 +1,5 @@
 import numpy as np
-from methods.saddle import SaddleSliding, extragradient_solver
+from methods.saddle import SaddleSliding, extragradient_solver, Logger
 from oracles.saddle import ArrayPair
 
 
@@ -10,6 +10,7 @@ class SaddleSlidingRunner(object):
         self.L = L
         self.mu = mu
         self.delta = delta
+        self.logger = Logger()
 
     def create_method(self, z_0: ArrayPair):
         eta = min(1. / (2 * self.delta), 1 / (6 * self.mu))
@@ -25,7 +26,7 @@ class SaddleSlidingRunner(object):
             inner_solver=extragradient_solver,
             inner_iterations=T_inner,
             z_0=z_0,
-            trace=True
+            logger=self.logger
         )
 
     def run(self, max_iter, max_time=None):

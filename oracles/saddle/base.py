@@ -33,6 +33,9 @@ class ArrayPair(object):
     def dot(self, other: "ArrayPair"):
         return self.x.dot(other.x) + self.y.dot(other.y)
 
+    def norm(self):
+        return np.sqrt(self.dot(self))
+
     def tuple(self) -> Tuple[np.ndarray, np.ndarray]:
         return self.x, self.y
 
