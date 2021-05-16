@@ -4,13 +4,13 @@ from oracles.saddle import ArrayPair
 
 
 class SaddleSlidingRunner(object):
-    def __init__(self, oracle_g, oracle_phi, L: float, mu: float, delta: float):
+    def __init__(self, oracle_g, oracle_phi, logger: Logger, L: float, mu: float, delta: float):
         self.oracle_g = oracle_g
         self.oracle_phi = oracle_phi
         self.L = L
         self.mu = mu
         self.delta = delta
-        self.logger = Logger()
+        self.logger = logger
 
     def create_method(self, z_0: ArrayPair):
         eta = min(1. / (2 * self.delta), 1 / (6 * self.mu))
