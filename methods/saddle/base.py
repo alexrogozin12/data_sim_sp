@@ -50,6 +50,8 @@ class BaseSaddleMethod(object):
             if self.logger is not None:
                 self.logger.step(self)
             self.step()
+            if self.stopping_criteria():
+                break
 
         if self.logger is not None:
             self.logger.end(self)

@@ -21,3 +21,7 @@ class Logger(object):
 
     def end(self, method: "BaseSaddleMethod"):
         self.z_star = method.z.copy()
+
+    @property
+    def num_steps(self):
+        return len(self.func)

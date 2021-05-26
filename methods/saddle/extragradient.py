@@ -23,7 +23,8 @@ class Extragradient(BaseSaddleMethod):
 
     def step(self):
         w = self.z - self.oracle.grad(self.z) * self.stepsize
-        self.z = self.z - self.oracle.grad(w) * self.stepsize
+        self.grad = self.oracle.grad(w)
+        self.z = self.z - self.grad * self.stepsize
 
 
 def extragradient_solver(oracle: BaseSmoothSaddleOracle, stepsize: float, z_0: ArrayPair,
