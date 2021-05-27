@@ -46,13 +46,14 @@ class SaddleSlidingRunner(object):
         self.method.run(max_iter, max_time)
 
 
-def gen_matrices(n_one: int, d: int, noise: float, num_summands: int, seed=0):
+def gen_matrices(n_one: int, d: int, mean: float, std: float, noise: float,
+                 num_summands: int, seed=0):
     np.random.seed(seed)
-    A_one = np.random.randn(n_one, d)
+    A_one = mean + std * np.random.randn(n_one, d)
     A = np.tile(A_one.T, num_summands).T
     A[n_one:] += noise * np.random.randn(n_one * (num_summands - 1), d)
 
-    b_one = np.random.randn(n_one)
+    b_one = mean + std * np.random.randn(n_one)
     b = np.tile(b_one, num_summands)
     b[n_one:] += noise * np.random.randn(n_one * (num_summands - 1))
 
@@ -114,10 +115,12 @@ def solve_with_extragradient(
     return logger_extragradient
 
 
-def run_experiment(n_one: int, d: int, noise: float, num_summands: int, regcoef_x: float,
-                   regcoef_y: float, r_x: float, r_y: float, num_iter_solution: int,
-                   max_time_solution: int, tolerance_solution: float, num_iter_experiment: int):
-    A, A_one, b, b_one = gen_matrices(n_one, d, noise, num_summands, seed=0)
+def run_experiment(n_one: int, d: int, mat_mean: float, mat_std: float, noise: float,
+                   num_summands: int, regcoef_x: float, regcoef_y: float, r_x: float, r_y: float,
+                   num_iter_solution: int, max_time_solution: int, tolerance_solution: float,
+                   num_iter_experiment: int):
+    A, A_one, b, b_one = gen_matrices(n_one, d, mean=mat_mean, std=mat_std, noise=noise,
+                                      num_summands=num_summands, seed=0)
     oracle_sum, oracle_phi, oracle_g = gen_oracles_for_sliding(
         A, A_one, b, b_one, num_summands, regcoef_x, regcoef_y)
 
