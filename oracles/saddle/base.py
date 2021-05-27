@@ -92,19 +92,19 @@ class OracleLinearComb(BaseSmoothSaddleOracle):
         return res
 
     def grad_x(self, z: ArrayPair) -> np.ndarray:
-        res = self.oracles[0].grad_x(z)
+        res = self.oracles[0].grad_x(z) * self.coefs[0]
         for oracle, coef in zip(self.oracles[1:], self.coefs[1:]):
             res += oracle.grad_x(z) * coef
         return res
 
     def grad_y(self, z: ArrayPair) -> np.ndarray:
-        res = self.oracles[0].grad_y(z)
+        res = self.oracles[0].grad_y(z) * self.coefs[0]
         for oracle, coef in zip(self.oracles[1:], self.coefs[1:]):
             res += oracle.grad_y(z) * coef
         return res
 
     def grad(self, z: ArrayPair) -> ArrayPair:
-        res = self.oracles[0].grad(z)
+        res = self.oracles[0].grad(z) * self.coefs[0]
         for oracle, coef in zip(self.oracles[1:], self.coefs[1:]):
             res += oracle.grad(z) * coef
         return res

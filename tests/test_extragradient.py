@@ -5,7 +5,7 @@ sys.path.append("../")
 import numpy as np
 from oracles.saddle import create_robust_linear_oracle, RobustLinearOracle, ArrayPair
 from oracles.saddle.saddle_simple import ScalarProdOracle
-from methods.saddle import Extragradient, Logger
+from methods.saddle import Extragradient, Logger, ConstraintsL2
 
 
 def create_random_robust_linear_oracle(n: int, d: int) -> RobustLinearOracle:
@@ -40,5 +40,18 @@ def test_extragradient_run_scalar_prod():
     z_0 = ArrayPair(np.random.rand(d), np.random.rand(d))
     logger = Logger()
     method = Extragradient(oracle, 0.5, z_0, tolerance=None, stopping_criteria=None, logger=logger)
+    method.run(max_iter=1000)
+    assert logger.z_star.dot(logger.z_star) <= 1e-8
+
+
+def test_extragradient_run_scalar_prod_constrained():
+    np.random.seed(0)
+    d = 20
+    oracle = ScalarProdOracle()
+    z_0 = ArrayPair(np.random.rand(d), np.random.rand(d))
+    logger = Logger()
+    constraints = ConstraintsL2(1., 2.)
+    method = Extragradient(oracle, 0.5, z_0, tolerance=None, stopping_criteria=None, logger=logger,
+                           constraints=constraints)
     method.run(max_iter=1000)
     assert logger.z_star.dot(logger.z_star) <= 1e-8

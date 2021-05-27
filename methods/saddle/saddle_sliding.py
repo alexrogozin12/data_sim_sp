@@ -6,6 +6,7 @@ from methods.saddle import Logger
 from datetime import datetime
 from collections import defaultdict
 from .base import BaseSaddleMethod
+from .constraints import ConstraintsL2
 
 
 class SaddlePointOracleRegularizer(BaseSmoothSaddleOracle):
@@ -35,7 +36,8 @@ class SaddleSliding(BaseSaddleMethod):
             inner_solver: Callable,
             inner_iterations: int,
             z_0: ArrayPair,
-            logger: Optional[Logger]
+            logger: Optional[Logger],
+            constraints: Optional[ConstraintsL2] = None
     ):
         super().__init__(oracle_g, z_0, None, None, logger)
         self.oracle_g = oracle_g
@@ -44,6 +46,7 @@ class SaddleSliding(BaseSaddleMethod):
         self.stepsize_inner = stepsize_inner
         self.inner_solver = inner_solver
         self.inner_iterations = inner_iterations
+        self.constraints = constraints
 
     def step(self):
         v = self.z - self.oracle_g.grad(self.z) * self.stepsize_outer
@@ -54,4 +57,4 @@ class SaddleSliding(BaseSaddleMethod):
         suboracle = SaddlePointOracleRegularizer(self.oracle_phi, self.stepsize_outer, v)
         return self.inner_solver(
             suboracle,
-            self.stepsize_inner, v, num_iter=self.inner_iterations)
+            self.stepsize_inner, v, num_iter=self.inner_iterations, constraints=self.constraints)
