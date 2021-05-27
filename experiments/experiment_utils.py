@@ -28,7 +28,7 @@ class SaddleSlidingRunner(object):
         self.eta = min(1. / (2 * self.delta), 1 / (6 * self.mu))
         self.e = min(0.25, 1 / (64 / (self.eta * self.mu) + 64 * self.eta * self.L ** 2 / self.mu))
         self.eta_inner = 0.5 / (self.eta * self.L + 1)
-        self.T_inner = int((1 + self.eta * self.L) * np.log10(1 / e))
+        self.T_inner = int((1 + self.eta * self.L) * np.log10(1 / self.e))
 
         self.method = SaddleSliding(
             oracle_g=self.oracle_g,
