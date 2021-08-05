@@ -10,6 +10,7 @@ from methods.saddle import ConstraintsL2
 from oracles.saddle import create_robust_linear_oracle, OracleLinearComb
 from methods.saddle import SaddleSliding, extragradient_solver, Logger, Extragradient
 from oracles.saddle import ArrayPair, BaseSmoothSaddleOracle
+from sklearn.model_selection import train_test_split
 
 
 class SaddleSlidingRunner(object):
@@ -156,3 +157,51 @@ def run_experiment(n_one: int, d: int, mat_mean: float, mat_std: float, noise: f
     runner.run(num_iter_experiment)
 
     return runner, logger_extragradient_again
+
+
+def run_experiment_real(A, b, num_summands: int, regcoef_x: float, regcoef_y: float, r_x: float,
+                        r_y: float, num_iter_experiment: int, z_true: ArrayPair):
+    _, A_one, _, b_one = train_test_split(A, b, test_size=1. / num_summands, random_state=0,
+                                          shuffle=True)
+    d = A.shape[1]
+    oracle_sum, oracle_phi, oracle_g = gen_oracles_for_sliding(
+        A, A_one, b, b_one, num_summands, regcoef_x, regcoef_y)
+
+    L, delta, mu = compute_L_delta_mu(A, A_one, b, r_x, r_y, regcoef_x, regcoef_y, num_summands)
+    print('L = {:.3f}, delta = {:.3f}, mu = {:.3f}'.format(L, delta, mu))
+
+    z_0 = ArrayPair.zeros(d)
+
+    print('Running extragradient...')
+    logger_extragradient_again = solve_with_extragradient(
+        oracle_sum, 1. / L, r_x, r_y, z_0, tolerance=0, max_time=None,
+        num_iter=num_iter_experiment, z_true=z_true)
+
+    print('Running Sliding...')
+    runner = SaddleSlidingRunner(
+        oracle_g=oracle_g,
+        oracle_phi=oracle_phi,
+        logger=Logger(z_true=z_true),
+        L=L,
+        mu=mu,
+        delta=delta,
+        r_x=r_x,
+        r_y=r_y
+    )
+    runner.create_method(ArrayPair.zeros(A.shape[1]))
+    print('T_inner = {}'.format(runner.method.inner_iterations))
+    print()
+    runner.run(num_iter_experiment)
+
+    return runner, logger_extragradient_again
+
+
+def create_oracles_for_sliding_real(A, b, regcoef_x, regcoef_y, num_summands, seed=0):
+    oracle_sum = create_robust_linear_oracle(A, b, regcoef_x, regcoef_y, normed=False)
+    oracle_sum = OracleLinearComb([oracle_sum], [1. / num_summands])
+    _, A_small, _, b_small = train_test_split(A, b, test_size=1. / num_summands, random_state=seed,
+                                              shuffle=True)
+    oracle_phi = create_robust_linear_oracle(A_small, b_small, regcoef_x, regcoef_y, normed=False)
+    oracle_g = OracleLinearComb([oracle_sum, oracle_phi], [1., -1.])
+
+    return oracle_sum, oracle_phi, oracle_g
