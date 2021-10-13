@@ -1,10 +1,8 @@
 import numpy as np
 
-from typing import Callable, Optional
-from oracles.saddle import BaseSmoothSaddleOracle, ArrayPair
-from methods.saddle import Logger
-from datetime import datetime
-from collections import defaultdict
+from typing import Callable, List, Optional
+from oracles.saddle import ArrayPair, BaseSmoothSaddleOracle, OracleLinearComb
+from methods.saddle import Logger, extragradient_solver
 from .base import BaseSaddleMethod
 from .constraints import ConstraintsL2
 
@@ -58,3 +56,101 @@ class SaddleSliding(BaseSaddleMethod):
         return self.inner_solver(
             suboracle,
             self.stepsize_inner, v, num_iter=self.inner_iterations, constraints=self.constraints)
+
+
+class DecentralizedSaddleSliding(BaseSaddleMethod):
+    def __init__(
+            self,
+            oracles: List[BaseSmoothSaddleOracle],
+            stepsize_outer: float,
+            stepsize_inner: float,
+            inner_iterations: int,
+            con_iters_grad: int,
+            con_iters_pt: int,
+            mix_mat: np.ndarray,
+            gossip_step: float,
+            z_0: ArrayPair,
+            logger=Optional[Logger],
+            constraints: Optional[ConstraintsL2] = None
+    ):
+        self._num_nodes = len(oracles)
+        oracle_sum = OracleLinearComb(oracles, [1 / self._num_nodes] * self._num_nodes)
+        super().__init__(oracle_sum, z_0, None, None, logger)
+        self.oracle_list = oracles
+        self.stepsize_outer = stepsize_outer
+        self.stepsize_inner = stepsize_inner
+        self.inner_iterations = inner_iterations
+        self.con_iters_grad = con_iters_grad
+        self.con_iters_pt = con_iters_pt
+        self.mix_mat = mix_mat
+        self.gossip_step = gossip_step
+        self.constraints = constraints
+        self.z_list = ArrayPair(
+            np.tile(z_0.x.copy(), self._num_nodes).reshape(self._num_nodes, z_0.x.shape[0]),
+            np.tile(z_0.y.copy(), self._num_nodes).reshape(self._num_nodes, z_0.y.shape[0])
+        )
+
+    def step(self):
+        grad_list_z = self.oracle_grad_list(self.z_list)
+        grad_av_z = self.acc_gossip(grad_list_z, self.con_iters_grad)
+        m = np.random.randint(0, self._num_nodes, size=1)[0]
+        grad_z_m = ArrayPair(grad_list_z.x[m], grad_list_z.y[m])
+        z = ArrayPair(self.z_list.x[m], self.z_list.y[m])
+        grad_av_z_m = ArrayPair(grad_av_z.x[m], grad_av_z.y[m])
+        v = z - self.stepsize_outer * (grad_av_z_m - grad_z_m)
+        u = self.solve_subproblem(m, v)
+
+        u_list = ArrayPair(
+            np.zeros((self._num_nodes, self.z.x.shape[0])),
+            np.zeros((self._num_nodes, self.z.y.shape[0]))
+        )
+        u_list.x[m] = u.x
+        u_list.y[m] = u.y
+        u_list = self._num_nodes * self.acc_gossip(u_list, self.con_iters_pt)
+
+        grad_av_u = self.acc_gossip(self.oracle_grad_list(u_list), self.con_iters_grad)
+        grad_av_u_m = ArrayPair(grad_av_u.x[m], grad_av_u.y[m])
+        z = u + self.stepsize_outer * (grad_av_z_m - grad_z_m - grad_av_u_m +
+                                       self.oracle_list[m].grad(u))
+        z_list = ArrayPair(
+            np.zeros((self._num_nodes, self.z.x.shape[0])),
+            np.zeros((self._num_nodes, self.z.y.shape[0]))
+        )
+        z_list.x[m] = z.x
+        z_list.y[m] = z.y
+        z_list = self._num_nodes * self.acc_gossip(z_list, self.con_iters_pt)
+        for i in range(len(z_list.x)):
+            z = ArrayPair(z_list.x[i], z_list.y[i])
+            if self.constraints is not None:
+                z_constr = self.constraints.apply(z)
+            else:
+                z_constr = z
+            self.z_list.x[i] = z_constr.x
+            self.z_list.y[i] = z_constr.y
+
+        self.z = ArrayPair(self.z_list.x.mean(axis=0), self.z_list.y.mean(axis=0))
+
+    def solve_subproblem(self, m: int, v: ArrayPair):
+        suboracle = SaddlePointOracleRegularizer(self.oracle_list[m], self.stepsize_outer, v)
+        return extragradient_solver(suboracle,
+                                    self.stepsize_inner, v, num_iter=self.inner_iterations,
+                                    constraints=self.constraints)
+
+    def oracle_grad_list(self, z: ArrayPair):
+        res = ArrayPair(np.empty_like(z.x), np.empty_like(z.y))
+        for i in range(z.x.shape[0]):
+            grad = self.oracle_list[i].grad(ArrayPair(z.x[i], z.y[i]))
+            res.x[i] = grad.x
+            res.y[i] = grad.y
+        return res
+
+    def acc_gossip(self, z: ArrayPair, n_iters: int):
+        z = z.copy()
+        z_old = z.copy()
+        for _ in range(n_iters):
+            z_new = ArrayPair(np.empty_like(z.x), np.empty_like(z.y))
+            z_new.x = (1 + self.gossip_step) * self.mix_mat.dot(z.x) - self.gossip_step * z_old.x
+            z_new.y = (1 + self.gossip_step) * self.mix_mat.dot(z.y) - self.gossip_step * z_old.y
+            z_old = z.copy()
+            z = z_new.copy()
+        return z
