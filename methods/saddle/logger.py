@@ -31,7 +31,6 @@ class LoggerDecentralized(Logger):
     def __init__(self, z_true: Optional[ArrayPair] = None):
         super().__init__(z_true)
         self.dist_to_con = []
-        self.z_list = []
 
     def step(self, method: "BaseSaddleMethod"):
         super().step(method)
@@ -41,4 +40,3 @@ class LoggerDecentralized(Logger):
             ((method.z_list.x - method.z_list.x.mean(axis=0)) ** 2).sum() /
             method.z_list.y.shape[0]
         )
-        self.z_list.append(method.z_list)

@@ -4,8 +4,7 @@ sys.path.append("../")
 
 import numpy as np
 from typing import List
-from methods.saddle import DecentralizedExtragradientGT
-from methods.saddle import Logger
+from methods.saddle import DecentralizedExtragradientGT, Logger
 from oracles.saddle import BaseSmoothSaddleOracle
 from .utils import compute_lam_2
 

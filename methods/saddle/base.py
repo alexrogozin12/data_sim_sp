@@ -3,7 +3,6 @@ import sys
 sys.path.append("../")
 
 import numpy as np
-from collections import defaultdict
 from datetime import datetime
 from oracles.saddle import BaseSmoothSaddleOracle, ArrayPair
 from typing import Optional
@@ -54,6 +53,7 @@ class BaseSaddleMethod(object):
                 break
 
         if self.logger is not None:
+            self.logger.step(self)
             self.logger.end(self)
 
     def _update_time(self):
