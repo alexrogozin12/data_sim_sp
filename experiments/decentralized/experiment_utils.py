@@ -6,12 +6,14 @@ import networkx as nx
 import numpy as np
 import scipy.linalg as sla
 import numpy.linalg as npla
-from typing import Optional, Tuple, List
+from sklearn.model_selection import StratifiedKFold
+from typing import Iterable, Optional, Tuple
 from methods.saddle import ConstraintsL2
 from oracles.saddle import create_robust_linear_oracle, OracleLinearComb, ArrayPair, \
     BaseSmoothSaddleOracle
 from methods.saddle import Logger, Extragradient, LoggerDecentralized
-from methods.runners import DecentralizedExtragradientGTRunner, DecentralizedSaddleSlidingRunner
+from methods.runners import DecentralizedExtragradientGTRunner, DecentralizedSaddleSlidingRunner, \
+    DecentralizedExtragradientConRunner
 
 
 def solve_with_extragradient(
@@ -69,7 +71,7 @@ def compute_robust_linear_normed_delta(A: np.ndarray, Am: np.ndarray, r_x: float
 
 
 def compute_robust_linear_normed_L_delta_mu(
-        A: np.ndarray, b: np.ndarray, part_sizes: Optional[List], n_parts: Optional[int],
+        A: np.ndarray, b: np.ndarray, part_sizes: Optional[Iterable], n_parts: Optional[int],
         r_x: float, r_y: float, regcoef_x: float, regcoef_y: float) -> Tuple[float, float, float]:
 
     if part_sizes is None and n_parts is None:
@@ -283,3 +285,117 @@ def run_experiment(n_one: int, d: int, mat_mean: float, mat_std: float, noise: f
     print('Done')
 
     return extragrad, sliding, z_true
+
+
+def run_extragrad_con(n_one: int, d: int, mat_mean: float, mat_std: float, noise: float,
+                      num_nodes: int, mix_mat: np.ndarray, regcoef_x: float, regcoef_y: float,
+                      r_x: float, r_y: float, eps: float,
+                      comm_budget_experiment: int, z_true: ArrayPair, seed: int = 0):
+
+    A, b = gen_matrices_decentralized(
+        num_matrices=num_nodes,
+        l=n_one,
+        d=d,
+        mean=mat_mean,
+        std=mat_std,
+        noise=noise,
+        seed=seed
+    )
+
+    oracles = [create_robust_linear_oracle(A[i:i + n_one], b[i:i + n_one], regcoef_x, regcoef_y,
+                                           normed=True) for i in range(0, n_one * num_nodes, n_one)]
+
+    L, _, mu = compute_robust_linear_normed_L_delta_mu(A, b, None, num_nodes, r_x, r_y,
+                                                       regcoef_x, regcoef_y)
+
+    z_0 = ArrayPair.zeros(d)
+
+    print('Running decentralized extragradient-con...')
+    runner = DecentralizedExtragradientConRunner(oracles, L, mu, mix_mat, r_x, r_y, eps,
+                                                 LoggerDecentralized(z_true))
+    runner.compute_method_params()
+    runner.create_method(z_0)
+    print('T_consensus = {}'.format(runner.method.con_iters))
+
+    runner.logger.comm_per_iter = 2 * runner.method.con_iters
+    runner.run(max_iter=comm_budget_experiment // runner.logger.comm_per_iter)
+    runner.logger.comm_budget_experiment = comm_budget_experiment
+    print('Done')
+
+    return runner
+
+
+def solve_with_extragradient_real_data(
+        A: np.ndarray, b: np.ndarray, regcoef_x: float, regcoef_y, r_x: float, r_y: float,
+        num_iter: int, max_time: float, tolerance: float) -> ArrayPair:
+
+    L = compute_robust_linear_normed_L(A, b, r_x, r_y, regcoef_x, regcoef_y)
+    z_0 = ArrayPair.zeros(A.shape[1])
+    oracle = create_robust_linear_oracle(A, b, regcoef_x, regcoef_y, normed=True)
+    print('Solving with extragradient...')
+    print('L = {:.3f}'.format(L))
+    z_true = solve_with_extragradient(
+        oracle, 1. / L, r_x, r_y, z_0, tolerance, num_iter, max_time).z_star
+    print()
+    return z_true
+
+
+def run_experiment_real_data(
+        A: np.ndarray, b: np.ndarray,
+        num_nodes: int, mix_mat: np.ndarray, regcoef_x: float, regcoef_y: float,
+        r_x: float, r_y: float, eps: float, comm_budget_experiment: int, z_true: ArrayPair):
+
+    oracles = []
+    part_sizes = np.empty(num_nodes, dtype=np.int32)
+    part_sizes[:] = A.shape[0] // num_nodes
+    part_sizes[:A.shape[0] - part_sizes.sum()] += 1
+    start = 0
+    for part_size in part_sizes:
+        A_small = A[start: start + part_size]
+        b_small = b[start: start + part_size]
+        oracles.append(create_robust_linear_oracle(
+            A_small, b_small, regcoef_x, regcoef_y, normed=True))
+        start += part_size
+
+    L, delta, mu = compute_robust_linear_normed_L_delta_mu(
+        A, b, part_sizes, None, r_x, r_y, regcoef_x, regcoef_y)
+    print('L = {:.3f}, delta = {:.3f}, mu = {:.3f}'.format(L, delta, mu))
+
+    z_0 = ArrayPair.zeros(A.shape[1])
+
+    print('Running decentralized extragradient...')
+    extragrad = DecentralizedExtragradientGTRunner(oracles, L, mu, mu, mix_mat,
+                                                   LoggerDecentralized(z_true))
+    extragrad.compute_method_params()
+    extragrad.create_method(z_0)
+    extragrad.run(max_iter=comm_budget_experiment // 2)
+    extragrad.logger.comm_budget = comm_budget_experiment
+    print()
+
+    print('Running decentralized extragradient-con...')
+    extragrad_con = DecentralizedExtragradientConRunner(oracles, L, mu, mix_mat, r_x, r_y, eps,
+                                                        LoggerDecentralized(z_true))
+    extragrad_con.compute_method_params()
+    extragrad_con.create_method(z_0)
+    print('T_consensus = {}'.format(extragrad_con.method.con_iters))
+    print()
+
+    extragrad_con.logger.comm_per_iter = 2 * extragrad_con.method.con_iters
+    extragrad_con.run(max_iter=comm_budget_experiment // extragrad_con.logger.comm_per_iter)
+    extragrad_con.logger.comm_budget_experiment = comm_budget_experiment
+
+    print('Running decentralized sliding...')
+    sliding = DecentralizedSaddleSlidingRunner(oracles, L, mu, delta, mix_mat, r_x, r_y, eps,
+                                               LoggerDecentralized(z_true))
+    sliding.compute_method_params()
+    sliding.create_method(z_0)
+
+    print('H_0 = {}, H_1 = {}, T_subproblem = {}'
+          .format(sliding.con_iters_grad, sliding.con_iters_pt, sliding.method.inner_iterations))
+    sliding.run(max_iter=comm_budget_experiment // sliding_comm_per_iter(sliding))
+    sliding.logger.comm_per_iter = sliding_comm_per_iter(sliding.method)
+    sliding.logger.comm_budget = comm_budget_experiment
+    print('Done')
+    print()
+
+    return extragrad, extragrad_con, sliding
