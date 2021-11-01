@@ -5,13 +5,29 @@ from .base import ArrayPair
 class ConstraintsL2(object):
     """
     Applies L2-norm constraints. Bounds x and y to Euclidean balls with radiuses r_x and r_y,
-    respectively (inplace)
+    respectively (inplace).
+
+    Parameters
+    ----------
+    r_x: float
+        Bound on x in L2 norm.
+
+    r_y: float
+        Bound on y in L2 norm.
     """
     def __init__(self, r_x: float, r_y: float):
         self.r_x = r_x
         self.r_y = r_y
 
     def apply(self, z: ArrayPair):
+        """
+        Applies L2 constraints to z (inplace).
+
+        Parameters
+        ----------
+        z: ArrayPair
+        """
+
         x_norm = np.linalg.norm(z.x)
         y_norm = np.linalg.norm(z.y)
         if x_norm >= self.r_x:

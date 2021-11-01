@@ -5,6 +5,32 @@ from oracles.saddle.base import ArrayPair
 
 
 class RobustLinearOracle(BaseSmoothSaddleOracle):
+    """
+    Oracle for Robust linear regression.
+
+    Parameters
+    ----------
+    matvec_Ax: Callable
+        Multiplication by feature matrix A.
+
+    matvec_ATx: Callable
+        Multiplication by A.T.
+
+    matmat_ATsA: Callable
+        Computes A.T diag(s) A, where diag(s) is a diagonal matrix with values of s on diagonal.
+
+    b: np.ndarray
+        Vector of labels.
+
+    regcoef_x: float
+        Regularization coefficient for x.
+
+    regcoef_delta: float
+        Regularization coefficient for delta.
+
+    normed: bool
+        If True, compute mean squared error over the dataset; else compute sum squared error.
+    """
     def __init__(self, matvec_Ax: Callable, matvec_ATx: Callable, b: np.ndarray, regcoef_x: float,
                  regcoef_delta: float, normed: bool):
         self.matvec_Ax = matvec_Ax

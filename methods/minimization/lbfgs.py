@@ -1,11 +1,35 @@
 import numpy as np
 
 from collections import deque
-from methods.line_search import get_line_search_tool
-from methods.base import BaseMethod
+from line_search import get_line_search_tool
+from base import BaseMethod
 
 
 class LBFGS(BaseMethod):
+    """
+    Limited memory BFGS optimization method.
+
+    oracle: BaseSmoothOracle
+        Oracle corresponding to the objective function.
+
+    x_0: np.ndarray
+        Initial guess.
+
+    tolerance: float
+        Accuracy required for stopping criteria.
+
+    memory_size: int
+        Memory size of LBFGS.
+
+    line_search_options: dict
+        Options for line search.
+
+    stopping_criteria: Optional[str]
+        Str specifying stopping criteria. See BaseMethod docs for details.
+
+    trace: bool
+        If True, saves the history of the method during its iterations.
+    """
     def __init__(self, oracle, x_0, tolerance=1e-4, memory_size=10,
                  line_search_options=None, stopping_criteria='grad_rel',
                  trace=True):

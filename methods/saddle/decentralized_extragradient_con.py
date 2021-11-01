@@ -9,7 +9,34 @@ from .constraints import ConstraintsL2
 
 class DecentralizedExtragradientCon(BaseSaddleMethod):
     """
-    Algorithm from https://arxiv.org/pdf/2010.13112.pdf
+    Decentralized Extragradient method with consensus subroutine
+    (https://arxiv.org/pdf/2010.13112.pdf)
+
+    Parameters
+    ----------
+    oracles: List[BaseSmoothSaddleOracle]
+        List of oracles corresponding to network nodes.
+
+    stepsize: float
+        Stepsize of Extragradient method.
+
+    con_iters: int
+        Number of iterations in consensus subroutine.
+
+    mix_mat: np.ndarray
+        Mixing matrix.
+
+    gossip_step: float
+        Step-size in consensus subroutine algorithm.
+
+    z_0: ArrayPair
+        Initial guess (similar at each node).
+
+    logger: Optional[Logger]
+        Stores the history of the method during its iterations.
+
+    constraints: Optional[ConstraintsL2]
+        L2 constraints on problem variables.
     """
 
     def __init__(
@@ -50,6 +77,18 @@ class DecentralizedExtragradientCon(BaseSaddleMethod):
         self.z = ArrayPair(self.z_list.x.mean(axis=0), self.z_list.y.mean(axis=0))
 
     def oracle_grad_list(self, z: ArrayPair) -> ArrayPair:
+        """
+        Compute oracle gradients at each computational network node.
+
+        Parameters
+        ----------
+        z: ArrayPair
+            Point at which the gradients are computed.
+
+        Returns
+        -------
+        grad: ArrayPair
+        """
         res = ArrayPair(np.empty_like(z.x), np.empty_like(z.y))
         for i in range(z.x.shape[0]):
             grad = self.oracle_list[i].grad(ArrayPair(z.x[i], z.y[i]))
@@ -58,6 +97,22 @@ class DecentralizedExtragradientCon(BaseSaddleMethod):
         return res
 
     def acc_gossip(self, z: ArrayPair, n_iters: int):
+        """
+        Accelerated consensus subroutine.
+
+        Parameters
+        ----------
+        z: ArrayPair
+            Initial values at nodes.
+
+        n_iters: int
+            Number of consensus iterations.
+
+        Returns
+        -------
+        z_mixed: ArrayPair
+            Values at nodes after consensus subroutine.
+        """
         z = z.copy()
         z_old = z.copy()
         for _ in range(n_iters):

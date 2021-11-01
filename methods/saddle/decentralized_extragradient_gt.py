@@ -9,7 +9,28 @@ from .constraints import ConstraintsL2
 
 class DecentralizedExtragradientGT(BaseSaddleMethod):
     """
-    Algorithm from paper https://ieeexplore.ieee.org/document/9304470
+    Decentralized Extragradient with gradient tracking.
+    (https://ieeexplore.ieee.org/document/9304470).
+
+    Parameters
+    ----------
+    oracles: List[BaseSmoothSaddleOracle]
+        List of oracles corresponding to network nodes.
+
+    stepsize: float
+        Stepsize of Extragradient method.
+
+    mix_mat: np.ndarray
+        Mixing matrix.
+
+    z_0: ArrayPair
+        Initial guess (similar at each node).
+
+    logger: Optional[Logger]
+        Stores the history of the method during its iterations.
+
+    constraints: Optional[ConstraintsL2]
+        L2 constraints on problem variables.
     """
 
     def __init__(

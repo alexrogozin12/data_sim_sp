@@ -1,9 +1,18 @@
 import numpy as np
 import scipy
-from oracles import BaseSmoothOracle
+from .base import BaseSmoothOracle
 
 
 class QuadraticOracle(BaseSmoothOracle):
+    """
+    Oracle for quadratic function 1/2 x.T A x - b.T x.
+
+    Parameters
+    ----------
+    A: np.ndarray
+
+    b: np.ndarray
+    """
     def __init__(self, A, b):
         if not scipy.sparse.isspmatrix_dia(A) and not np.allclose(A, A.T):
             raise ValueError('A should be a symmetric matrix.')

@@ -1,11 +1,46 @@
 import numpy as np
 import scipy
 from numpy.linalg import LinAlgError
-from methods.base import BaseMethod
-from methods.line_search import get_line_search_tool
+from base import BaseMethod
+from line_search import get_line_search_tool
 
 
 class RBFGS(BaseMethod):
+    """
+    Randomized BFGS method (https://arxiv.org/abs/2002.11337).
+
+    Parameters
+    ----------
+    oracle: BaseSmoothOracle
+        Oracle corresponding to the objective function.
+
+    x_0: np.ndarray
+        Initial guess.
+
+    s_distr: MatrixDistribution
+        Sketching matrix distribution.
+
+    tolerance: float
+        Accuracy required for stopping criteria.
+
+    B_0: np.ndarray
+        Initial guess for Hessian.
+
+    line_search_options: dict
+        Options for line search.
+
+    stopping_criteria: Optional[str]
+        Str specifying stopping criteria. See BaseMethod docs for details.
+
+    store_search_directions: bool
+        Save previous search directions and sample from them.
+
+    update_every_iteration: bool
+        If True, update matrix distribution at every iteration.
+
+    trace: bool
+        If True, saves the history of the method during its iterations.
+    """
     def __init__(self, oracle, x_0, s_distr, tolerance=1e-10, B_0=None,
                  line_search_options=None, stopping_criteria='grad_rel',
                  store_search_directions=False, update_every_iteration=False,
@@ -124,6 +159,17 @@ class ConstantDistribution(MatrixDistribution):
 class CustomDiscrete(MatrixDistribution):
     """
     Sample a set of random columns from given matrix.
+
+    Parameters
+    ----------
+    mat: np.ndarray
+        Fixed matrix from which the columns are being sampled.
+
+    probs: Optional[np.ndarray]
+        Set of probabilities assigned to columns. If None, use uniform probabilities.
+
+    size: int
+        Number of columns sampled at one iteration.
     """
 
     def __init__(self, mat, probs=None, size=None, sort_ids=False):

@@ -4,6 +4,26 @@ from datetime import datetime
 
 
 class BaseMethod(object):
+    """
+    Base class for minimization methods.
+
+    Parameters
+    ----------
+    oracle: BaseSmoothOracle
+        Oracle corresponding to the objective function.
+
+    x_0: np.ndarray
+        Initial guess.
+
+    stopping_criteria: Optional[str]
+        Str specifying stopping criteria. Supported values:
+        "grad_rel": terminate if ||f'(x_k)||^2 / ||f'(x_0)||^2 <= eps
+        "grad_abs": terminate if ||f'(x_k)||^2 <= eps
+        "func_abs": terminate if f(x_k) <= eps (implicitly assumes that f* = 0)
+
+    trace: bool
+        If True, saves the history of the method during its iterations.
+    """
     def __init__(self, oracle, x_0, stopping_criteria, trace):
         self.oracle = oracle
         self.x_0 = x_0.copy()
@@ -21,6 +41,18 @@ class BaseMethod(object):
                              .format(stopping_criteria))
 
     def run(self, max_iter=10, max_time=1200):
+        """
+        Run method for a maximum of max_iter iterations and max_time seconds.
+
+        Parameters
+        ----------
+        max_iter: int
+            Maximum number of iterations
+
+        max_time: int
+            Maximum running time
+        """
+
         if not hasattr(self, 'hist'):
             self.hist = defaultdict(list)
         if not hasattr(self, 'time'):
@@ -43,6 +75,10 @@ class BaseMethod(object):
         self.hist['x_star'] = self.x_k.copy()
 
     def _update_history(self):
+        """
+        Updates self.hist: saves time, function values and gradient norm.
+        """
+
         now = datetime.now()
         self.time += (now - self._absolute_time).total_seconds()
         self._absolute_time = now

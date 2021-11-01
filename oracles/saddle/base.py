@@ -3,6 +3,15 @@ from typing import List, Tuple
 
 
 class ArrayPair(object):
+    """
+    Stores a pair of np.ndarrays representing x and y variables in a saddle-point problem.
+
+    Parameters
+    ----------
+    x: np.ndarray
+
+    y: np.ndarray
+    """
     def __init__(self, x: np.ndarray, y: np.ndarray):
         self.x = x
         self.y = y
@@ -76,7 +85,14 @@ class BaseSmoothSaddleOracle(object):
 
 class OracleLinearComb(BaseSmoothSaddleOracle):
     """
-    Implements linear combination of several saddle point oracles with given coefficients
+    Implements linear combination of several saddle point oracles with given coefficients.
+    Resulting oracle = sum_{m=1}^M coefs[m] * oracles[m].
+
+    Parameters
+    ----------
+    oracles: List[BaseSmoothSaddleOracle]
+
+    coefs: List[float]
     """
 
     def __init__(self, oracles: List[BaseSmoothSaddleOracle], coefs: List[float]):

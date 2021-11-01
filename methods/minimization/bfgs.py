@@ -1,10 +1,34 @@
 import numpy as np
 
-from methods.line_search import get_line_search_tool
-from methods.base import BaseMethod
+from .line_search import get_line_search_tool
+from .base import BaseMethod
 
 
 class BFGS(BaseMethod):
+    """
+    BFGS optimization method.
+
+    oracle: BaseSmoothOracle
+        Oracle corresponding to the objective function.
+
+    x_0: np.ndarray
+        Initial guess.
+
+    H_0: np.ndarray
+        Initial guess for inverse Hessian
+
+    tolerance: float
+        Accuracy required for stopping criteria.
+
+    line_search_options: dict
+        Options for line search.
+
+    stopping_criteria: Optional[str]
+        Str specifying stopping criteria. See BaseMethod docs for details.
+
+    trace: bool
+        If True, saves the history of the method during its iterations.
+    """
     def __init__(self, oracle, x_0, H_0=None, tolerance=1e-4,
                  line_search_options=None, stopping_criteria='grad_rel',
                  trace=True):

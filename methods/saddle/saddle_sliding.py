@@ -8,6 +8,21 @@ from .constraints import ConstraintsL2
 
 
 class SaddlePointOracleRegularizer(BaseSmoothSaddleOracle):
+    """
+    Wrapper around saddle point oracle with additional regularization:
+    eta * F(z.x, z.y) + 1/2 ||z.x - v.x||^2 - 1/2 ||z.y - v.y||^2.
+
+    Parameters
+    ----------
+    oracle: BaseSmoothSaddleOracle
+        Oracle to be wrapped.
+
+    eta: float
+        Scaling parameter for the wrapped oracle.
+
+    v: vector for computing regularization parameters.
+    """
+
     def __init__(self, oracle: BaseSmoothSaddleOracle, eta: float, v: ArrayPair):
         self.oracle = oracle
         self.eta = eta
@@ -25,6 +40,39 @@ class SaddlePointOracleRegularizer(BaseSmoothSaddleOracle):
 
 
 class SaddleSliding(BaseSaddleMethod):
+    """
+    Centralized gradient sliding for saddle-point problems
+    (Algorithm 1 in https://arxiv.org/abs/2107.10706).
+
+    Parameters
+    ----------
+    oracle_g: BaseSmoothSaddleOracle
+        Oracle representing sum_{m=1}^M f_m(x, y).
+
+    oracle_phi: BaseSmoothSaddleOracle
+        Oracle representing f_1(x, y).
+
+    stepsize_outer: float
+        Stepsize in outer loop.
+
+    stepsize_inner: float
+        Stepsize in inner loop.
+
+    inner_solver: Callable
+        Solver for inner problem.
+
+    inner_iterations: int
+        Number of iterations for solving the inner subproblem.
+
+    z_0: ArrayPair
+        Initial guess.
+
+    logger: Optional[Logger]
+        Stores the history of the method during its iterations.
+
+    constraints: Optional[ConstraintsL2]
+        L2 constraints on problem variables.
+    """
     def __init__(
             self,
             oracle_g: BaseSmoothSaddleOracle,
@@ -59,6 +107,48 @@ class SaddleSliding(BaseSaddleMethod):
 
 
 class DecentralizedSaddleSliding(BaseSaddleMethod):
+    """
+    Decentralized gradient sliding for saddle-point problems
+    (Algorithm 2 in https://arxiv.org/abs/2107.10706).
+
+    Parameters
+    ----------
+    oracles: List[BaseSmoothSaddleOracle]
+        List of oracles corresponding to network nodes.
+
+    stepsize_outer: float
+        Stepsize in outer loop.
+
+    stepsize_inner: float
+        Stepsize in inner loop.
+
+    inner_solver: Callable
+        Solver for inner problem.
+
+    inner_iterations: int
+        Number of iterations for solving the inner subproblem.
+
+    con_iters_grad: int
+        Number of consensus iterations for mixing the gradients.
+
+    con_iters_pt: int
+        Number of consensus iterations for mixing the points.
+
+    mix_mat: np.ndarray
+        Mixing matrix
+
+    gossip_step: float
+        Stepsize for consensus subroutine.
+
+    z_0: ArrayPair
+        Initial guess.
+
+    logger: Optional[Logger]
+        Stores the history of the method during its iterations.
+
+    constraints: Optional[ConstraintsL2]
+        L2 constraints on problem variables.
+    """
     def __init__(
             self,
             oracles: List[BaseSmoothSaddleOracle],

@@ -2,6 +2,26 @@ from scipy.optimize.linesearch import scalar_search_wolfe2
 
 
 class LineSearchTool(object):
+    """
+    Implements line search along a given direction.
+
+    Parameters
+    ----------
+    method: str
+        Line search strategy. Supported values:
+        "Wolfe": Wolfe search.
+        "Armijo": Armijo search
+        "Constant": Constant step-size
+
+    c1: coefficient for Armijo line search or first coefficient for Wolfe line search.
+
+    c2: second coefficient for Wolfe line search.
+
+    alpha_0: initial step-size for Wolfe and Armijo line search.
+
+    c: step-size for Constant strategy.
+    """
+
     def __init__(self, method='Wolfe', **kwargs):
         self._method = method
         if self._method == 'Wolfe':

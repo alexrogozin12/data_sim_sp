@@ -1,9 +1,29 @@
 import numpy as np
 from scipy.special import expit
-from oracles import BaseSmoothOracle
+from .base import BaseSmoothOracle
 
 
 class LogRegL2Oracle(BaseSmoothOracle):
+    """
+    Logistic regression oracle with L2 regularization.
+
+    Parameters
+    ----------
+    matvec_Ax: Callable
+        Multiplication by feature matrix A.
+
+    matvec_ATx: Callable
+        Multiplication by A.T.
+
+    matmat_ATsA: Callable
+        Computes A.T diag(s) A, where diag(s) is a diagonal matrix with values of s on diagonal.
+
+    b: np.ndarray
+        Vector of labels.
+
+    regcoef: float
+        Regularization coefficient.
+    """
     def __init__(self, matvec_Ax, matvec_ATx, matmat_ATsA, b, regcoef):
         self.matvec_Ax = matvec_Ax
         self.matvec_ATx = matvec_ATx

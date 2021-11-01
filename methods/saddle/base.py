@@ -10,6 +10,28 @@ from .logger import Logger
 
 
 class BaseSaddleMethod(object):
+    """
+    Base class for saddle-point algorithms.
+
+    Parameters
+    ----------
+    oracle: BaseSmoothSaddleOracle
+        Oracle corresponding to the objective function.
+
+    z_0: ArrayPair
+        Initial guess
+
+    tolerance: Optional[float]
+        Accuracy required for stopping criteria.
+
+    stopping_criteria: Optional[str]
+        Str specifying stopping criteria. Supported values:
+        "grad_rel": terminate if ||f'(x_k)||^2 / ||f'(x_0)||^2 <= eps
+        "grad_abs": terminate if ||f'(x_k)||^2 <= eps
+
+    logger: Optional[Logger]
+        Stores the history of the method during its iterations.
+    """
     def __init__(
             self,
             oracle: BaseSmoothSaddleOracle,
@@ -32,7 +54,18 @@ class BaseSaddleMethod(object):
             raise ValueError('Unknown stopping criteria type: "{}"' \
                              .format(stopping_criteria))
 
-    def run(self, max_iter, max_time=None):
+    def run(self, max_iter: int, max_time: float = None):
+        """
+        Run the method for no more that max_iter iterations and max_time seconds.
+
+        Parameters
+        ----------
+        max_iter: int
+            Maximum number of iterations.
+
+        max_time: float
+            Maximum time (in seconds).
+        """
         self.grad_norm_0 = self.z.norm()
         if self.logger is not None:
             self.logger.start(self)

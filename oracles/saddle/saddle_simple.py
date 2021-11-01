@@ -3,6 +3,13 @@ from .base import BaseSmoothSaddleOracle, ArrayPair
 
 
 class ScalarProdOracle(BaseSmoothSaddleOracle):
+    """
+    Simple oracle for Scalar product. Computes coef * z.T z.
+
+    Parameters
+    ----------
+    coef: float
+    """
     def __init__(self, coef: float = 1.):
         super().__init__()
         self.coef = coef
@@ -18,6 +25,15 @@ class ScalarProdOracle(BaseSmoothSaddleOracle):
 
 
 class SquareDiffOracle(BaseSmoothSaddleOracle):
+    """
+    Oracle implementing coef_x * x.T x + coef_y * y.T y.
+
+    Parameters
+    ----------
+    coef_x: float
+
+    coef_y: float
+    """
     def __init__(self, coef_x: float = 1., coef_y: float = 1.):
         super().__init__()
         self.coef_x = coef_x

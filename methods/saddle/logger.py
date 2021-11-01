@@ -3,6 +3,15 @@ from .base import ArrayPair
 
 
 class Logger(object):
+    """
+    Instrument for saving the method history during its iterations.
+
+    Parameters
+    ----------
+    z_true: Optional[ArrayPair]
+        Exact solution of the problem. If specified, logs distance to solution.
+    """
+
     def __init__(self, z_true: Optional[ArrayPair] = None):
         self.func = []
         self.time = []
@@ -28,6 +37,16 @@ class Logger(object):
 
 
 class LoggerDecentralized(Logger):
+    """
+    Instrument for saving method history during its iterations for decentralized methods.
+    Additionally logs distance to consensus.
+
+    Parameters
+    ----------
+    z_true: Optional[ArrayPair]
+        Exact solution of the problem. If specified, logs distance to solution.
+    """
+
     def __init__(self, z_true: Optional[ArrayPair] = None):
         super().__init__(z_true)
         self.dist_to_con = []
