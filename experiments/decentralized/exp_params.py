@@ -1,5 +1,5 @@
-N_ONE = 50  # number of rows in each of the matrices held by agents
-DIM = 30  # ambient dimension
+N_ONE = 100  # number of rows in each of the matrices held by agents
+DIM = 40  # ambient dimension
 MAT_MEAN = 5.  # mean of each matrix entry
 MAT_STD = 2.  # std of each matrix entry
 NUM_ITER_SOLUTION = 500000  # max number of iterations for finding saddle with extragradient
