@@ -1,8 +1,8 @@
 import numpy as np
 
 from numpy.linalg import LinAlgError
-from line_search import get_line_search_tool
-from base import BaseMethod
+from .line_search import get_line_search_tool
+from .base import BaseMethod
 
 
 class GradientDescent(BaseMethod):

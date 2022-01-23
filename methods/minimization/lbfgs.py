@@ -1,8 +1,8 @@
 import numpy as np
 
 from collections import deque
-from line_search import get_line_search_tool
-from base import BaseMethod
+from .line_search import get_line_search_tool
+from .base import BaseMethod
 
 
 class LBFGS(BaseMethod):

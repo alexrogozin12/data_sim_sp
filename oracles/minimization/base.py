@@ -1,4 +1,5 @@
 import numpy as np
+from typing import List
 
 
 class BaseSmoothOracle(object):
@@ -35,3 +36,34 @@ class BaseSmoothOracle(object):
         Computes phi'(alpha) = (f(x + alpha*d))'_{alpha}
         """
         return np.squeeze(self.grad(x + alpha * d).dot(d))
+
+
+class OracleLinearComb(BaseSmoothOracle):
+    """
+    Implements linear combination of several oracles with given coefficients.
+    Resulting oracle = sum_{m=1}^M coefs[m] * oracles[m].
+
+    Parameters
+    ----------
+    oracles: List[BaseSmoothOracle]
+
+    coefs: List[float]
+    """
+
+    def __init__(self, oracles: List[BaseSmoothOracle], coefs: List[float]):
+        if len(oracles) != len(coefs):
+            raise ValueError("Numbers of oracles and coefs should be equal!")
+        self.oracles = oracles
+        self.coefs = coefs
+
+    def func(self, x: np.ndarray) -> float:
+        res = 0
+        for oracle, coef in zip(self.oracles, self.coefs):
+            res += oracle.func(x) * coef
+        return res
+
+    def grad(self, x: np.ndarray) -> np.ndarray:
+        res = self.oracles[0].grad(x) * self.coefs[0]
+        for oracle, coef in zip(self.oracles[1:], self.coefs[1:]):
+            res += oracle.grad(x) * coef
+        return res

@@ -1,7 +1,7 @@
 import numpy as np
 
-from line_search import get_line_search_tool
-from base import BaseMethod
+from .line_search import get_line_search_tool
+from .base import BaseMethod
 
 
 class Nesterov(BaseMethod):
