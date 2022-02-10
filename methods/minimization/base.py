@@ -1,6 +1,8 @@
+import numpy as np
 import numpy.linalg as npla
 from collections import defaultdict
 from datetime import datetime
+from typing import Optional
 
 
 class BaseMethod(object):
@@ -24,6 +26,7 @@ class BaseMethod(object):
     trace: bool
         If True, saves the history of the method during its iterations.
     """
+
     def __init__(self, oracle, x_0, stopping_criteria, trace):
         self.oracle = oracle
         self.x_0 = x_0.copy()
@@ -102,3 +105,45 @@ class BaseMethod(object):
 
     def stopping_criteria_none(self):
         return False
+
+
+class BaseDecentralizedMethod(object):
+    def __init__(self, oracle_list, x_0: np.ndarray, logger: "LoggerDecentralized"):
+        self.oracle_list = oracle_list
+        self.x = x_0.copy()
+        self.logger = logger
+
+    def run(self, max_iter: int, max_time: Optional[float] = None):
+        if self.logger is not None:
+            self.logger.start(self)
+        if max_time is None:
+            max_time = +np.inf
+        if not hasattr(self, 'time'):
+            self.time = 0.
+
+        self._absolute_time = datetime.now()
+        for iter_count in range(max_iter):
+            if self.time > max_time:
+                break
+            self._update_time()
+            if self.logger is not None:
+                self.logger.step(self)
+            self.step()
+
+        if self.logger is not None:
+            self.logger.step(self)
+            self.logger.end(self)
+
+    def _update_time(self):
+        now = datetime.now()
+        self.time += (now - self._absolute_time).total_seconds()
+        self._absolute_time = now
+
+    def step(self):
+        raise NotImplementedError('step() not implemented!')
+
+    def func_list(self, x: np.ndarray) -> np.ndarray:
+        return np.array([self.oracle_list[i].func(x[i]) for i in range(len(self.oracle_list))])
+
+    def grad_list(self, x: np.ndarray) -> np.ndarray:
+        return np.vstack([self.oracle_list[i].grad(x[i]) for i in range(len(self.oracle_list))])

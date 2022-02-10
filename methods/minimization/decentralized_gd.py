@@ -2,34 +2,33 @@ import numpy as np
 
 from typing import List, Optional
 from oracles.minimization import BaseSmoothOracle, OracleLinearComb
-from .base import BaseMethod
+from .base import BaseDecentralizedMethod
+from .logger import LoggerDecentralized
 
 
-class DecentralizedGD(BaseMethod):
+class DecentralizedGD(BaseDecentralizedMethod):
     def __init__(
             self,
-            oracles: List[BaseSmoothOracle],
+            oracle_list: List[BaseSmoothOracle],
             stepsize: float,
             mix_mat: np.ndarray,
-            z_0: np.ndarray,
-            trace: bool
+            x_0: np.ndarray,
+            logger: LoggerDecentralized,
+            mix_mat_repr: str
     ):
-        self._num_nodes = len(oracles)
-        oracle_sum = OracleLinearComb(oracles, [1 / self._num_nodes] * self._num_nodes)
-        super().__init__(oracle_sum, z_0, None, trace)
-        self.oracle_list = oracles
+        super().__init__(oracle_list, x_0, logger)
         self.stepsize = stepsize
         self.mix_mat = mix_mat
-        self.z_list = np.tile(z_0.copy(), self._num_nodes).reshape(self._num_nodes, z_0.shape[0])
-        self.x_k = self.z_list.mean(axis=0)
+        if mix_mat_repr not in ["simple", "kronecker"]:
+            raise ValueError(
+                "Matrix representation type should be 'simple' or 'kronecker', got '{}'"
+                    .format(self.mix_mat_repr))
+        self.mix_mat_repr = mix_mat_repr  # should be "kronecker" or "simple"
 
     def step(self):
-        self.z_list = self.mix_mat.dot(self.z_list) - \
-                      self.stepsize * self.oracle_grad_list(self.z_list)
-        self.x_k = self.z_list.mean(axis=0)
-
-    def oracle_grad_list(self, z: np.ndarray) -> np.ndarray:
-        res = np.empty_like(z)
-        for i in range(z.shape[0]):
-            res[i] = self.oracle_list[i].grad(z[i])
-        return res
+        if self.mix_mat_repr == "simple":
+            x_mixed = self.mix_mat.dot(self.x)
+        else:
+            n, d = self.x.shape
+            x_mixed = self.mix_mat.dot(self.x.flatten()).reshape(n, d)
+        self.x = x_mixed - self.stepsize * self.grad_list(self.x)
