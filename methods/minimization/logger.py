@@ -26,4 +26,4 @@ class LoggerDecentralized(object):
             ((method.x - method.x.mean(axis=0)) ** 2).sum() / method.x.shape[0]
         )
         if self.x_true is not None:
-            self.sq_dist_avg_to_opt.append((method.x.mean(axis=0) - self.x_true) ** 2)
+            self.sq_dist_avg_to_opt.append(((method.x.mean(axis=0) - self.x_true) ** 2).sum())
