@@ -1,6 +1,7 @@
 from .base import BaseMethod
 from .bfgs import BFGS
 from .decentralized_gd import DecentralizedGD
+from .diging import Diging
 from .lbfgs import LBFGS
 from .logger import LoggerDecentralized
 from .gradient_descent import GradientDescent
