@@ -24,7 +24,7 @@ class Diging(BaseDecentralizedMethod):
                 "Matrix representation type should be 'simple' or 'kronecker', got '{}'"
                     .format(self.mix_mat_repr))
         self.mix_mat_repr = mix_mat_repr  # should be "kronecker" or "simple"
-        self.y = np.zeros_like(x_0)
+        self.y = self.grad_list(x_0)
 
     def step(self):
         x_new = self.mul_by_mix_mat(self.x) - self.stepsize * self.y
